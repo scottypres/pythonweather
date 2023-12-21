@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Processed Data Viewer</title>
+    <script>
+        function fetchProcessedData() {
+            fetch('http://127.0.0.1:5000/get_processed_data')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data); // Use this data to update your page accordingly
+                    // For example, if data contains an array
+                    // You can populate an HTML table, list, etc.
+                })
+                .catch(error => {
+                    console.error('There has been a problem with your fetch operation:', error);
+                });
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Processed Data</h1>
+    <button onclick="fetchProcessedData()">Load Processed Data</button>
+
+    <!-- Here you would have elements to display your data, e.g. a table or list -->
+    <div id="data-display"></div>
+
+</body>
+
+</html>
