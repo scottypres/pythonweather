@@ -1,83 +1,59 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-import requests
-import json
-import os
-import time
+import requests, json, os, time, re
+
 
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
 
 FILENAME = 'processed_data.json'
 TIMEOUT_FILE = 'last_update_time.txt'  # New file to track the timestamp of the last API call
-API_TIMEOUT_SECONDS = 30 * 60 # 30 minutes in seconds
+API_TIMEOUT_SECONDS = 1 # 30 minutes in seconds
 EXTERNAL_API_URL = 'http://192.168.1.145:5000/'  # You must define this if it's needed
 
+# Define your mappings outside of the relabel_data function so they can be accessed by relabel_item
+height_mapping = {
+    '10m': '32ft',
+    '80m': '262ft',
+    '180m': '590ft',
+}
 
-# This is a mock function for processing data that you would implement
+pressure_mapping = {
+    '1000hPa': '361ft',
+    '975hPa': '1050ft',
+    '950hPa': '1640ft',
+    '925hPa': '2625ft',
+    '900hPa': '3281ft',
+    '850hPa': '4921ft',
+    '800hPa': '6234ft',
+}
+
+# This is your relabel_data function, which includes the relabel_item function
+
+def replace_keys(original_key, mapping):
+    for key, value in mapping.items():
+        original_key = original_key.replace(key, value)
+    return original_key
+
 def relabel_data(data):
-    relabeled_data = {}
+    # Combine both mappings for easier iteration
+    combined_mapping = {**height_mapping, **pressure_mapping}
 
-    height_mapping = {
-        '10m': '32ft',
-        '80m': '262ft',
-        '180m': '590ft',
-    }
-    
-    pressure_mapping = {
-        '1000hPa': '361ft',
-        '975hPa': '1050ft',
-        '950hPa': '1640ft',
-        '925hPa': '2625ft',
-        '900hPa': '3281ft',
-        '850hPa': '4921ft',
-        '800hPa': '6234ft',
-    }
+    # Check if 'hourly_units' exist in data and is a dictionary
+    if 'hourly_units' in data and isinstance(data['hourly_units'], dict):
+        for original_key in list(data['hourly_units'].keys()):  # Make a copy of the keys
+            new_key = replace_keys(original_key, combined_mapping)
+            if new_key != original_key:  # Only change key if it's different
+                data['hourly_units'][new_key] = data['hourly_units'].pop(original_key)
 
-    # Debug: Print the input data
-    print("Input data:", data)
+    # Check if 'hourly' exist in data and is a dictionary
+    if 'hourly' in data and isinstance(data['hourly'], dict):
+        for original_key in list(data['hourly'].keys()):  # Make a copy of the keys
+            new_key = replace_keys(original_key, combined_mapping)
+            if new_key != original_key:  # Only change key if it's different
+                data['hourly'][new_key] = data['hourly'].pop(original_key)
 
-    for key, value in data.items():
-        # Debug: Print the current key being checked
-        print("Checking key:", key) 
-
-        found_matching_key = False
-        # Check for height keys and replace them
-        for original, replacement in height_mapping.items():
-            if original in key:
-                new_key = key.replace(original, replacement)
-                relabeled_data[new_key] = value
-
-                # Debug: Print the matching key information
-                print(f"Found key matching height ({original}). Relabeled to {new_key}")
-
-                found_matching_key = True
-                break
-
-        if not found_matching_key:
-            # check for pressure keys if height keys are not present
-            for original, replacement in pressure_mapping.items():
-                if original in key:
-                    new_key = key.replace(original, replacement)
-                    relabeled_data[new_key] = value
-
-                    # Debug: Print the matching key information
-                    print(f"Found key matching pressure ({original}). Relabeled to {new_key}")
-
-                    found_matching_key = True
-                    break
-
-        if not found_matching_key:
-            # if neither height nor pressure keys are found, just copy the key-value pair
-            relabeled_data[key] = value
-            # Debug: Print message indicating no relabeling occurred
-            print(f"No matching key for relabeling. Key '{key}' remains the same.")
-
-    # Debug: Print the output data
-    print("Relabeled data:", relabeled_data)
-
-    return relabeled_data
-
+    return data
 
 
 @app.route('/query_external_api', methods=['GET'])
