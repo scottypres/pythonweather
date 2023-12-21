@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Flask",
+            "type": "python",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "weather_server.py",
+                "FLASK_ENV": "development",
+                "FLASK_DEBUG": "1" // 0 for no debugger, 1 for debugger
+            },
+            "args": [
+                "run",
+                // If you want to specify host and port
+                // you can uncomment the following lines
+                // "--host", "0.0.0.0",
+                // "--port", "5000"
+            ],
+            // Use Jinja syntax for templates (if needed for debugging)
+            "jinja": true,
+            // Assuming the entry point (`app.py`) is in the 
+            // root of the workspace folder
+            "cwd": "${workspaceFolder}",
+            // Open a new console window for output
+            "console": "integratedTerminal",
+            // set to false to avoid autoreloading
+            "justMyCode": true
+        }
+    ]
+}

@@ -2,16 +2,15 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests, json
 
-
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes and all origins  
 
 # This is a mock function for processing data that you would implement
-def process_data(data):
+def relabel_data(data):
     # Your processing logic goes here
     # For now, I'm just returning data as is
-    processed_data = data
-    return processed_data
+    relabeled_data = data
+    return relabeled_data
 
 @app.route('/query_external_api', methods=['GET'])
 def query_external_api():
@@ -20,8 +19,8 @@ def query_external_api():
         response = requests.get(external_api_url)
         response.raise_for_status()
         data = response.json()  # Assuming the response will be in JSON format
-        processed_data = process_data(data)
-        return jsonify(processed_data)
+        relabeled_data = relabel_data(data)
+        return jsonify(relabeled_data)
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
